@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyTorch
+*.pth
+*.pt
+checkpoint*.tar
+
+# Data
+*.csv
+*.json
+*.jsonl
+*.parquet
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+raw_data/
+processed_data/
+data/raw/
+data/processed/
+
+# Experiments and outputs
+experiments/
+checkpoints/
+logs/
+results/
+outputs/
+runs/
+
+# TensorBoard
+events.out.tfevents.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Model files (comment out if you want to track them)
+*.pth
+*.pt
+best_model.pt
+final_model.pt
+
+# Config backups
+*.yaml.bak
+*.yml.bak

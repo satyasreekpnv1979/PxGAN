@@ -1,0 +1,119 @@
+# Feature Groups Configuration
+# Defines how telemetry features are mapped to image channels
+# Each group becomes one channel in the output image
+
+feature_groups:
+  # Channel 0: Flow statistics
+  flow_stats:
+    features:
+      - bytes_sent
+      - bytes_received
+      - packets_sent
+      - packets_received
+      - flow_duration
+      - bytes_per_second
+      - packets_per_second
+    description: "Network flow volume and rate metrics"
+
+  # Channel 1: Timing features
+  timing:
+    features:
+      - iat_mean          # Inter-arrival time mean
+      - iat_std           # Inter-arrival time std
+      - iat_min
+      - iat_max
+      - burst_count       # Number of bursts
+      - burst_duration
+    description: "Temporal patterns and timing characteristics"
+
+  # Channel 2: Protocol flags and indicators
+  protocol_flags:
+    features:
+      - tcp_syn
+      - tcp_ack
+      - tcp_fin
+      - tcp_rst
+      - tcp_psh
+      - tcp_urg
+      - is_encrypted
+      - protocol_type     # Encoded as numeric
+    description: "Protocol-level flags and indicators"
+
+  # Channel 3: Service and port information
+  service_ports:
+    features:
+      - src_port_encoded  # Categorized port ranges
+      - dst_port_encoded
+      - service_category  # HTTP, DNS, SSH, etc.
+      - port_entropy      # Entropy of port distribution
+    description: "Service and port-based features"
+
+  # Channel 4: Connection patterns
+  connection_patterns:
+    features:
+      - unique_src_ips
+      - unique_dst_ips
+      - connection_count
+      - failed_connections
+      - connection_success_rate
+    description: "Connection-level behavioral patterns"
+
+  # Channel 5: Payload characteristics
+  payload:
+    features:
+      - payload_size_mean
+      - payload_size_std
+      - payload_entropy
+      - ascii_ratio
+      - binary_ratio
+    description: "Payload content characteristics"
+
+  # Channel 6: DNS and application layer
+  application:
+    features:
+      - dns_query_count
+      - dns_response_time
+      - http_request_count
+      - http_response_codes
+      - tls_handshake_time
+    description: "Application-layer metrics"
+
+  # Channel 7: Statistical features
+  statistical:
+    features:
+      - packet_size_variance
+      - flow_symmetry        # Ratio of bidirectional traffic
+      - periodicity_score    # Detected periodic patterns
+      - anomaly_indicators   # Pre-computed statistical features
+    description: "Derived statistical features"
+
+# Aggregation functions applied to each feature within a time window
+aggregation:
+  functions:
+    - mean
+    - std
+    - min
+    - max
+    - percentile_25
+    - percentile_75
+  # Total values per feature: 6
+
+# Mapping configuration
+mapping:
+  # Output image will have len(feature_groups) channels
+  num_channels: 8
+
+  # Spatial dimensions
+  image_height: 32
+  image_width: 32
+
+  # How to fill the H x W grid from aggregated features
+  # Options: 'tile' (repeat values), 'pad' (zero-pad), 'resize' (interpolate)
+  fill_strategy: 'tile'
+
+# Normalization strategy
+normalization:
+  method: 'zscore'  # Options: 'zscore', 'minmax', 'robust'
+  per_channel: true  # Normalize each channel independently
+  clip_outliers: true
+  clip_std_threshold: 3.0  # Clip values beyond ±3 std devs

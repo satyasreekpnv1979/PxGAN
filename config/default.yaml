@@ -1,0 +1,196 @@
+# PxGAN Default Configuration
+# Main configuration file for training and evaluation
+
+# Data configuration
+data:
+  # Time window parameters
+  window_size: 30          # seconds
+  stride: 10               # seconds (sliding window stride)
+
+  # Image dimensions
+  image_shape: [32, 32]    # [height, width]
+
+  # Feature configuration
+  feature_groups_config: "config/feature_groups.yaml"
+
+  # Data splits (temporal split, not random)
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+  # Data loading
+  batch_size: 64
+  num_workers: 8           # DataLoader workers (CPU parallelism)
+  pin_memory: false        # Set true if using GPU
+
+  # Conditional features (metadata for conditional generation)
+  conditional_features:
+    - host_role            # Encoded: server, client, gateway, etc.
+    - time_of_day          # Encoded: hour of day (0-23)
+    - day_of_week          # Encoded: 0-6
+    - network_segment      # Optional: network zone identifier
+
+# Model architecture
+model:
+  # Generator
+  generator:
+    z_dim: 128             # Latent noise dimension
+    cond_dim: 16           # Conditional input dimension
+    out_channels: 8        # Must match number of feature groups
+    img_size: 32
+    hidden_dims: [1024, 512, 256, 128]
+    use_spectral_norm: false
+    activation: 'relu'
+    output_activation: 'tanh'
+
+  # PatchGAN Discriminator
+  discriminator_patch:
+    in_channels: 8         # Must match out_channels
+    ndf: 64                # Base discriminator filters
+    n_layers: 3
+    use_spectral_norm: true
+    activation: 'leaky_relu'
+    leaky_slope: 0.2
+
+  # Sequence Critic
+  discriminator_seq:
+    in_channels: 8
+    seq_len: 5             # Number of consecutive windows
+    cnn_embed_dim: 256
+    lstm_hidden: 128
+    lstm_layers: 2
+    dropout: 0.3
+    use_spectral_norm: true
+
+# Training configuration
+training:
+  # Optimization
+  epochs: 100
+  lr: 0.0002
+  betas: [0.5, 0.999]
+  weight_decay: 0.0
+
+  # Learning rate scheduling
+  scheduler:
+    type: 'reduce_on_plateau'  # Options: 'reduce_on_plateau', 'cosine', 'step'
+    patience: 10
+    factor: 0.5
+    min_lr: 1.0e-6
+
+  # Loss weights
+  loss_weights:
+    lambda_adv_patch: 1.0      # PatchGAN adversarial loss
+    lambda_adv_seq: 0.5        # Sequence critic adversarial loss
+    lambda_fm: 10.0            # Feature matching loss
+    lambda_gp: 10.0            # Gradient penalty (WGAN-GP)
+    lambda_recon: 5.0          # Reconstruction loss (optional)
+
+  # Training schedule
+  discriminator_steps: 1       # D updates per batch
+  generator_steps: 1           # G updates per batch
+  seq_critic_frequency: 5      # Train seq critic every N batches
+
+  # Gradient clipping
+  clip_grad_norm: 1.0
+
+  # Adversarial training
+  adversarial_training:
+    enabled: true
+    start_epoch: 10            # Start after initial convergence
+    frequency: 5               # Epochs between adversarial training rounds
+    epsilon: 0.01              # FGSM perturbation magnitude
+    num_evasions: 100          # Number of evasive examples per round
+    z_search_steps: 10         # Optimization steps for GAN evasions
+
+  # Validation
+  validate_every: 1            # Epochs
+  save_checkpoint_every: 5     # Epochs
+  save_best_only: false        # Save all checkpoints or best only
+
+  # Logging
+  log_interval: 100            # Batches
+  log_images: true
+  num_images_to_log: 8
+
+# Evaluation configuration
+evaluation:
+  # Anomaly scoring weights
+  # [reconstruction, patch_disc, seq_disc, statistical]
+  anomaly_weights: [0.3, 0.3, 0.2, 0.2]
+
+  # Threshold selection
+  threshold_method: 'fpr'      # Options: 'fpr', 'cost', 'percentile'
+  threshold_fpr: 0.01          # Target false positive rate
+
+  # Operational cost parameters (for cost-based threshold)
+  false_alarm_cost: 10
+  miss_cost: 100
+
+  # Metrics to compute
+  metrics:
+    - auc_roc
+    - auc_pr
+    - precision_at_k
+    - recall_at_fpr
+    - f1_score
+    - operational_cost
+
+  # Precision@k values
+  precision_k_values: [10, 50, 100, 200]
+
+  # Recall@FPR values
+  recall_fpr_values: [0.001, 0.01, 0.05]
+
+  # Robustness testing
+  robustness:
+    enabled: true
+    attack_types:
+      - fgsm
+      - pgd
+      - transfer
+    epsilon_values: [0.001, 0.01, 0.05, 0.1]
+    pgd_steps: 10
+    pgd_step_size: 0.01
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false             # Set true for performance if determinism not critical
+  num_threads: 32              # For CPU training on your Xeon server
+
+# Paths
+paths:
+  data_dir: "./data"
+  output_dir: "./experiments"
+  checkpoint_dir: "./checkpoints"
+  log_dir: "./logs"
+  results_dir: "./results"
+
+# Computing environment
+device: "cpu"                  # Options: 'cpu', 'cuda', 'mps'
+distributed: false              # Set true for multi-GPU training
+mixed_precision: false          # FP16 training (requires GPU)
+
+# Experiment tracking
+tracking:
+  enabled: true
+  backend: 'tensorboard'       # Options: 'tensorboard', 'wandb', 'mlflow', 'none'
+  project_name: 'pxgan'
+  experiment_name: null        # Auto-generated if null
+  log_system_metrics: true
+  log_gradients: false
+  log_model_architecture: true
+
+# Advanced options
+advanced:
+  # For extremely large datasets
+  use_memory_efficient_loading: false
+  cache_processed_windows: true
+
+  # Model compilation (PyTorch 2.0+)
+  compile_models: false
+  compile_backend: 'inductor'
+
+  # Gradient accumulation (for effective larger batch size)
+  gradient_accumulation_steps: 1
