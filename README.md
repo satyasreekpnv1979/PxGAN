@@ -23,8 +23,8 @@ Telemetry Data → Pixel Mapper → (C, H, W) Images
                      ↓
               Generated Images
                      ↓
-         ┌──────────┴──────────┐
-         ↓                     ↓
+         ┌───────────┴──────────┐
+          ↓                     ↓
   PatchGAN (spatial)    SeqCritic (temporal)
   ```
 
@@ -290,8 +290,8 @@ Contributions welcome! Please:
 ## Support
 
 For issues or questions:
-- GitHub Issues: [github.com/yourusername/pxgan/issues](https://github.com/yourusername/pxgan/issues)
-- Email: your.email@example.com
+- GitHub Issues: [github.com/satyasreekpnv1979/PxGAN/issues](https://github.com/satyasreekpnv1979/PxGAN/issues)
+- Email: "Dr. K P N V Satya Sree" <satyasreekpnv@gmail.com>
 
 ---
 
